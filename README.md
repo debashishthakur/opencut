@@ -1,64 +1,52 @@
-<table width="100%">
-  <tr>
-    <td align="left" width="120">
-      <img src="https://assets.opencut.app/branding/symbol.svg" alt="OpenCut Logo" width="100" />
-    </td>
-    <td align="right">
-      <h1>OpenCut</h1>
-      <h3 style="margin-top: -10px;">A free and open source video editor for web, desktop, and mobile.</h3>
-    </td>
-  </tr>
-</table>
+# OpenCut — personal working copy
 
-[![Discord](https://img.shields.io/discord/1386309140057690133?label=Discord&logo=discord&logoColor=fff&color=5865F2&style=flat)](https://discord.gg/zmR9N35cjK)
-[![X](https://img.shields.io/badge/follow-%40opencutapp-000?logo=x&logoColor=fff&style=flat)](https://x.com/opencutapp)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat)](LICENSE)
+My working copy of [OpenCut](https://github.com/OpenCut-app/OpenCut), the free and open-source video editor, plus my own experiments on top of it. Everything here is MIT-licensed; credit for the editor goes to the upstream OpenCut team.
 
-## Status
+## What's in here
 
-**OpenCut is being rewritten from the ground up.** What's coming:
+This checkout is **two codebases**:
 
-- An Editor API
-- First-class third party plugins (made possible by a plugin-first architecture)
-- Desktop, mobile, and browser from one codebase (Rust core)
-- MCP server (for AI agents)
-- Headless mode (automation, batch rendering)
-- A scripting tab directly in the editor
+| | Where | What |
+|---|---|---|
+| **The rewrite** | repo root (`apps/`) | Upstream's ground-up rewrite scaffold — TanStack Start web app, Elysia API, GPUI (Rust) desktop shell, managed by [moon](https://moonrepo.dev) |
+| **Classic + my AI agent work** | `classic/` | The previous feature-complete editor, with my additions: an AI editing agent, new GPU effects, and a headless render pipeline |
 
-You can still find the previous version at [opencut-app/opencut-classic](https://github.com/opencut-app/opencut-classic), which is the one to reach for today. [opencut.app](https://opencut.app) still runs the classic version. The rewrite will live at [new.opencut.app](https://new.opencut.app) until it's ready to take over.
-
-## Development
-
-Install [proto](https://moonrepo.dev/proto) if you haven't already:
+`classic/` is deliberately **not tracked** by this repo — it's its own git repo, pushed to [debashishthakur/opencut-classic](https://github.com/debashishthakur/opencut-classic). To get a full checkout:
 
 ```sh
-bash <(curl -fsSL https://moonrepo.dev/install/proto.sh)
+git clone https://github.com/debashishthakur/opencut.git
+cd opencut
+git clone https://github.com/debashishthakur/opencut-classic.git classic
 ```
 
-From the repo root:
+## The AI editing agent (in `classic/`)
+
+The main thing I've built so far — an agent that edits a video for you from a reference reel:
+
+- **Reference analysis** — decodes a reference reel, detects its shots, and measures its pacing, look, and beat-to-cut coupling
+- **Footage profiling** — actually looks at your clips (measured scoring + vision) to pick in-points, instead of guessing
+- **Beat sync** — detects the tempo of *your* music and re-instantiates the reference's cutting rhythm on its beat grid
+- **No-crop guarantee** — never scales past contain; fills the canvas with a blurred backdrop instead of throwing away pixels
+- **GPU color grading** — new WGSL shaders (color grade, vignette, sharpen) working in linear light, plus a shader-generic effects pipeline in Rust
+- **Headless rendering** — one HTTP call in, finished MP4 out (`POST /api/agent/render`), no browser tab needed
+- **`/create` landing page** — a guided end-to-end flow for testers
+
+[PROGRESS.md](PROGRESS.md) is the detailed architecture audit and goal-by-goal build log — start there.
+
+## Running things
 
 ```sh
-proto use    # installs the tools pinned in .prototools
-```
-
-```sh
+# The rewrite (repo root)
+proto use              # installs moon, bun, rust pinned in .prototools
 moon run web:dev       # localhost:5173
 moon run api:dev       # localhost:8787
-moon run desktop:dev   # see apps/desktop/README.md
+moon run desktop:dev   # native Rust window
+
+# Classic + agent (classic/apps/web)
+cd classic && bun install
+cd apps/web && bun dev # localhost:3005
 ```
-
-## Contributing
-
-We're not set up to take outside contributions yet while the architecture is being designed. If you want to follow along, ask questions, or just hang out, [join the Discord](https://discord.gg/zmR9N35cjK) or [open an issue](https://github.com/opencut-app/opencut/issues).
-
-## Sponsors
-
-OpenCut is supported by companies that believe in open source creator tools.
-
-- [**fal.ai**](https://fal.ai?utm_source=github-opencut&utm_campaign=oss): Generative image, video, and audio models all in one place.
-
-Want your logo here? Reach out at [sponsor@opencut.app](mailto:sponsor@opencut.app).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — same as upstream OpenCut.
